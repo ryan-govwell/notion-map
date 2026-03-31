@@ -221,7 +221,7 @@ d3.select('#btn-zoom-reset').on('click', () => svg.transition().duration(400).ca
 // ── Drag detection — prevents accidental clicks while panning ──
 let dragMoved = false;
 svg.on('mousedown.drag', () => { dragMoved = false; })
-   .on('mousemove.drag', () => { dragMoved = true; });
+   .on('mousemove.drag', (event) => { if (event.buttons > 0) dragMoved = true; });
 
 // ── Load map data ──
 d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(us => {
