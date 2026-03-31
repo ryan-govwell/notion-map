@@ -229,10 +229,26 @@ d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(us => {
   const borders = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
   const nation  = topojson.mesh(us, us.objects.states, (a, b) => a === b);
 
-  // ── State paths ──
-  g.selectAll('path.state')
+  // ── State paths — wrapped in <a> for native link behaviour (works in Notion sandbox) ──
+  const links = g.selectAll('a.state-link')
     .data(states.features)
-    .join('path')
+    .join('a')
+      .attr('class', d => {
+        const url = STATE_URLS[d.properties.name];
+        return `state-link ${url && url !== '#' ? 'has-link' : 'no-link'}`;
+      })
+      .attr('href', d => {
+        const url = STATE_URLS[d.properties.name];
+        return url && url !== '#' ? url : null;
+      })
+      .attr('target', '_blank')
+      .attr('rel', 'noopener noreferrer')
+      .on('click', function(event) {
+        // Cancel navigation if the user was dragging
+        if (dragMoved) event.preventDefault();
+      });
+
+  links.append('path')
       .attr('class', d => {
         const url = STATE_URLS[d.properties.name];
         return `state ${url && url !== '#' ? 'has-link' : 'no-link'}`;
@@ -248,12 +264,7 @@ d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(us => {
         tooltip.style.left    = (event.clientX + 14) + 'px';
         tooltip.style.top     = (event.clientY - 36) + 'px';
       })
-      .on('mouseleave', () => { tooltip.style.opacity = '0'; })
-      .on('click', function(event, d) {
-        if (dragMoved) return;
-        const url = STATE_URLS[d.properties.name];
-        if (url && url !== '#') window.open(url, '_blank');
-      });
+      .on('mouseleave', () => { tooltip.style.opacity = '0'; });
 
   // ── State borders (on top, non-interactive) ──
   g.append('path').datum(borders).attr('class', 'state-borders').attr('d', path);
